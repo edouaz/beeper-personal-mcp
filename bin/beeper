@@ -1,0 +1,14 @@
+#!/bin/sh
+# Runs the official Beeper CLI with all state kept under ./state/beeper.
+set -eu
+umask 077
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+export BEEPER_CLI_CONFIG_DIR="$ROOT/state/beeper"
+export TMPDIR="$ROOT/state/tmp"
+mkdir -p "$TMPDIR"
+BIN=${BEEPER_CLI_BIN:-}
+[ -n "$BIN" ] || { [ -x "$ROOT/bin/beeper-binary" ] && BIN="$ROOT/bin/beeper-binary"; } || true
+[ -n "$BIN" ] || { [ -x "$ROOT/node_modules/.bin/beeper" ] && BIN="$ROOT/node_modules/.bin/beeper"; } || true
+[ -n "$BIN" ] || BIN="$ROOT/runtime/node_modules/.bin/beeper"
+[ -x "$BIN" ] || { echo "Beeper CLI missing. Run npm ci at the project root." >&2; exit 1; }
+exec "$BIN" "$@"

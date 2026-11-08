@@ -1,0 +1,13 @@
+# Install as ~/.config/systemd/user/beeper-profile-server.service. The server binary is installed by `bin/beeper install server`.
+[Unit]
+Description=Beeper profile server
+
+[Service]
+ExecStart=%h/beeper-mcp/state/beeper/bin/beeper-server --host=127.0.0.1 --port=23374 --data-dir=%h/beeper-mcp/state/beeper/profiles/server/server --server-env=production
+Restart=always
+Environment=BEEPER_SERVER_DATA_DIR=%h/beeper-mcp/state/beeper/profiles/server/server
+StandardOutput=append:%h/beeper-mcp/state/beeper/logs/profiles/server.log
+StandardError=append:%h/beeper-mcp/state/beeper/logs/profiles/server.err.log
+
+[Install]
+WantedBy=default.target

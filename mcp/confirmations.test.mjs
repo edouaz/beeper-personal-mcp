@@ -1,0 +1,98 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import http from 'node:http';
+import { once } from 'node:events';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { createConfirmations } from './confirmations.mjs';
+import { createHttpServer, makeBackend } from './server.mjs';
+import { hashOwnerPassword } from './oauth.mjs';
+
+test('MCP prepare, authenticated human approval and one-use send use the exact frozen payload', async () => {
+  let time = Date.now(), failSend = false;
+  const requests = [];
+  const backend = http.createServer(async (req, res) => {
+    const chunks = []; for await (const chunk of req) chunks.push(chunk);
+    requests.push({ method: req.method, url: req.url, auth: req.headers.authorization, body: Buffer.concat(chunks).toString() });
+    res.setHeader('Content-Type', 'application/json');
+    if (req.method === 'POST') {
+      res.statusCode = failSend ? 500 : 200;
+      res.end(JSON.stringify({ chatID: '!test:example', pendingMessageID: 'pending-test' }));
+    } else res.end(JSON.stringify({ id: '!test:example', title: '<script>recipient</script>', accountID: 'test-network' }));
+  });
+  backend.listen(0, '127.0.0.1'); await once(backend, 'listening');
+  const password = 'test-owner-password-'.repeat(3);
+  const origin = 'https://example.com';
+  const backendCall = makeBackend(backend.address().port, 'backend-secret');
+  const confirmations = createConfirmations({ origin, ownerPasswordHash: hashOwnerPassword(password), backend: backendCall, clock: () => time });
+  const oauth = { handle: () => false, validateBearer: token => ['write', 'other', 'read'].includes(token), subject: token => token === 'write' ? 'client1' : token === 'other' ? 'client2' : undefined };
+  const server = createHttpServer({ oauth, resourceMetadata: origin + '/metadata', beeperToken: 'backend-secret', beeperPort: backend.address().port, confirmations });
+  server.listen(0, '127.0.0.1'); await once(server, 'listening');
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const clients = [];
+  const clientFor = async token => {
+    const client = new Client({ name: 'confirmation-test', version: '1' }); clients.push(client);
+    await client.connect(new StreamableHTTPClientTransport(new URL(base + '/mcp'), { requestInit: { headers: { Authorization: `Bearer ${token}` } } })); return client;
+  };
+  const post = (body, headers = {}) => fetch(base + '/beeper/oauth/confirm', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers }, body: new URLSearchParams(body) });
+  try {
+    const client = await clientFor('write'), reader = await clientFor('read'), other = await clientFor('other');
+    const tools = (await client.listTools()).tools;
+    assert.ok(tools.some(x => x.name === 'prepare_message'));
+    assert.ok(!tools.some(x => x.name === 'reply_to_message'));
+    assert.equal(tools.find(x => x.name === 'send_message').annotations.readOnlyHint, false);
+    assert.equal(tools.find(x => x.name === 'send_message').annotations.openWorldHint, true);
+    const draft = { chatID: '!test:example', text: 'exact <text> & hello' };
+    assert.equal((await reader.callTool({ name: 'prepare_message', arguments: draft })).isError, true);
+    assert.equal(requests.length, 0);
+    assert.equal((await client.callTool({ name: 'prepare_message', arguments: { ...draft, chatID: '../x' } })).isError, true);
+    const prepare = async () => JSON.parse((await client.callTool({ name: 'prepare_message', arguments: draft })).content[0].text);
+    const prepared = await prepare();
+    assert.equal(requests.length, 1); assert.equal(requests[0].method, 'GET');
+    const send = () => client.callTool({ name: 'send_message', arguments: { confirmationToken: prepared.confirmationToken } });
+    assert.equal((await send()).isError, true);
+    const page = await (await fetch(base + new URL(prepared.confirmationURL).pathname + new URL(prepared.confirmationURL).search)).text();
+    assert.ok(page.includes('&lt;script&gt;recipient&lt;/script&gt;'));
+    assert.ok(page.includes('exact &lt;text&gt; &amp; hello'));
+    const csrf = page.match(/name="csrf" value="([^"]+)"/)[1];
+    const form = { request: prepared.confirmationToken, csrf, password };
+    assert.equal((await post(form)).status, 403);
+    assert.equal((await post({ ...form, csrf: 'fake' }, { Origin: origin })).status, 403);
+    assert.equal((await post({ ...form, password: 'wrong' }, { Origin: origin })).status, 401);
+    assert.equal((await post(form, { Origin: origin })).status, 200);
+    assert.equal(requests.filter(x => x.method === 'POST').length, 0);
+    assert.equal((await reader.callTool({ name: 'send_message', arguments: { confirmationToken: prepared.confirmationToken } })).isError, true);
+    assert.equal((await other.callTool({ name: 'send_message', arguments: { confirmationToken: prepared.confirmationToken } })).isError, true);
+    const concurrent = await Promise.all([send(), send()]);
+    assert.equal(concurrent.filter(x => x.isError).length, 1);
+    assert.equal(requests.filter(x => x.method === 'POST').length, 1);
+    const sent = requests.find(x => x.method === 'POST');
+    assert.equal(sent.url, '/v1/chats/!test%3Aexample/messages');
+    assert.deepEqual(JSON.parse(sent.body), { text: draft.text });
+    assert.equal(sent.auth, 'Bearer backend-secret');
+    assert.equal((await send()).isError, true);
+    assert.equal((await fetch(base + '/v1/accounts')).status, 404);
+    const expired = await prepare(); time += 600001;
+    assert.equal((await client.callTool({ name: 'send_message', arguments: { confirmationToken: expired.confirmationToken } })).isError, true);
+    assert.equal((await fetch(base + '/beeper/oauth/confirm?request=' + expired.confirmationToken)).status, 410);
+    const ambiguous = await prepare();
+    const html = await (await fetch(base + '/beeper/oauth/confirm?request=' + ambiguous.confirmationToken)).text();
+    const failureForm = { request: ambiguous.confirmationToken, csrf: html.match(/name="csrf" value="([^"]+)"/)[1], password };
+    assert.equal((await post(failureForm, { Origin: origin })).status, 200);
+    failSend = true;
+    const unknown = await client.callTool({ name: 'send_message', arguments: { confirmationToken: ambiguous.confirmationToken } });
+    assert.equal(JSON.parse(unknown.content[0].text).confirmationConsumed, true);
+    assert.equal((await client.callTool({ name: 'send_message', arguments: { confirmationToken: ambiguous.confirmationToken } })).isError, true);
+    assert.equal(requests.filter(x => x.method === 'POST').length, 2);
+    assert.equal((await fetch(base + '/beeper/oauth/confirm?request=' + ambiguous.confirmationToken)).status, 410);
+    const lock = await prepare();
+    const lockHTML = await (await fetch(base + '/beeper/oauth/confirm?request=' + lock.confirmationToken)).text();
+    const lockForm = { request: lock.confirmationToken, csrf: lockHTML.match(/name="csrf" value="([^"]+)"/)[1], password: 'wrong' };
+    for (let i = 0; i < 5; i++) assert.equal((await post(lockForm, { Origin: origin })).status, 401);
+    assert.equal((await post({ ...lockForm, password }, { Origin: origin })).status, 429);
+  } finally {
+    await Promise.all(clients.map(x => x.close()));
+    await new Promise(resolve => server.close(resolve));
+    await new Promise(resolve => backend.close(resolve));
+  }
+});

@@ -1,0 +1,24 @@
+[Unit]
+Description=Opt-in Beeper event webhook forwarder
+After=beeper-profile-server.service
+Requires=beeper-profile-server.service
+ConditionPathExists=%h/beeper-mcp/state/events.env
+
+[Service]
+Type=simple
+WorkingDirectory=%h/beeper-mcp
+EnvironmentFile=%h/beeper-mcp/state/events.env
+Environment=BEEPER_TARGET_FILE=%h/beeper-mcp/state/beeper/targets/server.json
+ExecStart=/usr/bin/node %h/beeper-mcp/mcp/events.mjs
+Restart=on-failure
+RestartSec=15
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

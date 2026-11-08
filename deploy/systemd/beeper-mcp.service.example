@@ -1,0 +1,29 @@
+# Install as ~/.config/systemd/user/beeper-mcp.service (assumes the project lives in ~/beeper-mcp; adjust the paths).
+[Unit]
+Description=Private Beeper MCP gateway
+After=beeper-profile-server.service
+Requires=beeper-profile-server.service
+ConditionPathExists=%h/beeper-mcp/state/mcp.env
+ConditionPathExists=%h/beeper-mcp/state/oauth-owner.env
+
+[Service]
+Type=simple
+WorkingDirectory=%h/beeper-mcp
+EnvironmentFile=%h/beeper-mcp/state/mcp.env
+EnvironmentFile=%h/beeper-mcp/state/oauth-owner.env
+Environment=BEEPER_TARGET_FILE=%h/beeper-mcp/state/beeper/targets/server.json
+Environment=MCP_PORT=8776
+ExecStart=/usr/bin/node %h/beeper-mcp/mcp/server.mjs
+Restart=on-failure
+RestartSec=15
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/beeper-mcp/state
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

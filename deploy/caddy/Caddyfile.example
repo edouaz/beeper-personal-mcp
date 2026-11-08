@@ -1,0 +1,15 @@
+# Minimal reverse proxy for the MCP gateway. Replace the hostname; Caddy obtains the certificate.
+# The MCP listens on 127.0.0.1:8776 and must never be exposed directly.
+mcp.example.com {
+	@beeper path /beeper/mcp /beeper/oauth/* /.well-known/oauth-protected-resource/beeper/mcp /.well-known/oauth-authorization-server/beeper/oauth
+	handle @beeper {
+		request_body {
+			max_size 64KB
+		}
+		@mcp path /beeper/mcp
+		rewrite @mcp /mcp
+		reverse_proxy 127.0.0.1:8776
+	}
+	# Everything else is not served by this project.
+	respond 404
+}

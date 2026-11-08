@@ -1,0 +1,37 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mcp/package-lock.json
+      - run: npm ci
+      - run: npm --prefix mcp ci
+      - run: npm run check
+      - run: npm test
+      - run: npm audit --omit=dev
+      - run: npm --prefix mcp audit --omit=dev
+  private-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject tracked runtime data and credentials
+        run: |
+          if git ls-files | grep -E '(^|/)(state|ops\.local|runtime|node_modules)/|\.env$|oauth\.json$|server\.json$|\.(pem|key)$'; then
+            echo 'Private or generated file tracked; remove it before publishing.'
+            exit 1
+          fi

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "private-beeper-conversations",
+  "version": "0.2.0",
+  "description": "Read and search Beeper conversations, then send text only after authenticated owner approval for each exact message.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Private Beeper Conversations",
+        "shortDescription": "Beeper avec envoi confirm\u00e9",
+        "longDescription": "Read and search connected Beeper chats. Prepare text messages and approve each exact recipient and text on a protected owner page before one send attempt.",
+        "category": "Productivity",
+        "capabilities": [],
+        "defaultPrompt": "Find my recent unread Beeper conversations."
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="480" viewBox="0 0 1280 480" role="img" aria-labelledby="title desc">
+<title id="title">Beeper Personal MCP</title><desc id="desc">Your conversations, connected. A personal bridge between your chats and your assistant.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f4f8ff"/><stop offset="1" stop-color="#eeebff"/></linearGradient><linearGradient id="icon" x2="1" y2="1"><stop stop-color="#65a8ff"/><stop offset="1" stop-color="#7760ec"/></linearGradient></defs>
+<rect width="1280" height="480" rx="32" fill="url(#bg)"/>
+<rect x="80" y="76" width="84" height="84" rx="25" fill="url(#icon)"/>
+<path d="M103 100h38a8 8 0 0 1 8 8v20a8 8 0 0 1-8 8h-20l-14 10v-10h-4a8 8 0 0 1-8-8v-20a8 8 0 0 1 8-8Z" fill="white"/>
+<circle cx="109" cy="118" r="3" fill="#7760ec"/><circle cx="122" cy="118" r="3" fill="#7760ec"/><circle cx="135" cy="118" r="3" fill="#7760ec"/>
+<g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif"><text x="80" y="222" font-size="54" font-weight="700" letter-spacing="-2" fill="#222236">Beeper Personal MCP</text><text x="80" y="277" font-size="29" fill="#66667e">Your conversations, connected.</text>
+<rect x="80" y="329" width="188" height="43" rx="21" fill="white"/><text x="104" y="357" font-size="17" fill="#6154c3">Self-hosted · MIT</text>
+<rect x="282" y="329" width="165" height="43" rx="21" fill="white"/><text x="305" y="357" font-size="17" fill="#6154c3">Local or HTTPS</text>
+<rect x="899" y="121" width="277" height="206" rx="30" fill="white" stroke="#dedff0"/><text x="932" y="166" font-size="14" fill="#88889b">ONE SMALL BRIDGE</text><text x="932" y="213" font-size="22" fill="#33334b">Your assistant</text><path d="M940 239h195" stroke="#a69bea" stroke-width="2" stroke-dasharray="5 6"/><text x="932" y="284" font-size="22" fill="#6558d8">Your conversations</text></g></svg>
