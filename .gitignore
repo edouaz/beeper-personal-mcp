@@ -16,3 +16,4 @@ __pycache__/
 coverage/
 *.pem
 *.key
+!website/assets/brand-kit.zip

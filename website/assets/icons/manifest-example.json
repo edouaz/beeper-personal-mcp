@@ -1,0 +1,11 @@
+{
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "logo": "./assets/logo-1024.png",
+        "composerIcon": "./assets/composer.svg",
+        "composerIconDark": "./assets/composer-dark.svg"
+      }
+    }
+  }
+}

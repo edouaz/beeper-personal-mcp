@@ -2,9 +2,10 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync, chmodSync } from 'n
 import { join } from 'node:path';
 
 export function validateConfig(config) {
-  if (!['local', 'remote', 'tunnel'].includes(config.mode)) throw new Error('Mode must be local, remote or tunnel.');
+  if (!['local', 'remote', 'tunnel', 'openai'].includes(config.mode)) throw new Error('Mode must be local, openai, remote or tunnel.');
   if (!Number.isInteger(config.port) || config.port < 1024 || config.port > 65535) throw new Error('Port must be between 1024 and 65535.');
   if (!['confirm', 'direct'].includes(config.sendMode)) throw new Error('Send mode must be confirm or direct.');
+  if (config.mode === 'openai' && !/^tunnel_[A-Za-z0-9_-]{8,128}$/.test(config.tunnelId || '')) throw new Error('Use the tunnel_id from OpenAI Platform tunnel settings.');
   if (config.mode === 'remote') {
     const url = new URL(config.origin);
     if (url.protocol !== 'https:' || url.origin !== config.origin || url.username || url.password || ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) throw new Error('Use a public HTTPS origin, for example https://mcp.example.com (no path or trailing slash).');
@@ -30,6 +31,7 @@ export function environment(root, config, origin = config.origin) {
   env.MCP_PORT = String(config.port);
   env.BEEPER_TARGET_FILE = join(root, 'state/beeper/targets/server.json');
   env.BEEPER_SEND_MODE = config.sendMode;
+  if (config.mode === 'openai') return env;
   if (config.mode === 'local') {
     env.MCP_AUTH_TOKEN = config.localToken;
     if (!/^[A-Za-z0-9_-]{43}$/.test(config.localToken || '')) throw new Error('Invalid local token; restore state/setup.json from your private backup.');

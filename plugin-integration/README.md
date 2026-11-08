@@ -15,3 +15,7 @@ Do not extract tokens from ChatGPT or paste them in chat. If no supported token 
 OAuth uses dynamic client registration with PKCE and messages:read plus messages:send. The owner approves the initial OAuth grant in their browser, then approves each exact outgoing message separately at the returned protected confirmation link. The server requires the owner password and enforces expiration and one-use tokens. See the root README for details. Do not send a real message as a connectivity test without explicit consent.
 
 The checked-in Agent Plugins 1.0 JSON schemas are used to validate manifests and are excluded from plugin archives. No secret, state, dependency, or unrelated file belongs in a plugin archive.
+
+## App icons
+
+Reusable MIT-licensed app/composer icons and a current portable manifest fragment are available from the [public brand kit](https://edouaz.github.io/beeper-personal-mcp/#brand). See [brand documentation](../docs/BRAND.md) for dimensions, packaging paths and format validation. The experimental generator above does not automatically merge these assets.

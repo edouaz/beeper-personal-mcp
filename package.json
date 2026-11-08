@@ -5,14 +5,20 @@
   "description": "Your conversations, connected. A self-hosted Beeper MCP gateway with a guided CLI.",
   "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=20.19" },
-  "bin": { "beeper-mcp": "cli/index.mjs" },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "bin": {
+    "beeper-mcp": "cli/index.mjs"
+  },
   "scripts": {
     "setup": "node cli/index.mjs setup",
     "start": "node cli/index.mjs start",
     "doctor": "node cli/index.mjs doctor",
     "test": "node --test cli/*.test.mjs && npm --prefix mcp test",
-    "check": "node --check cli/index.mjs && npm --prefix mcp run check"
+    "check": "for f in cli/*.mjs; do node --check \"$f\" || exit 1; done; npm --prefix mcp run check"
   },
-  "dependencies": { "beeper-cli": "0.6.2" }
+  "dependencies": {
+    "beeper-cli": "0.6.2"
+  }
 }

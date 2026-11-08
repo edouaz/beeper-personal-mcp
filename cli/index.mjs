@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
+import { openaiArgs, runtimeKey } from './openai.mjs';
 import { configured, saveConfig, loadConfig, validateConfig, environment } from './config.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -44,16 +45,21 @@ async function setup(options) {
     if (!rl) return fallback;
     return (await rl.question(question)).trim() || fallback;
   };
-  let mode, origin, email;
+  let mode, origin, email, tunnelId, allowWrites;
   try {
     console.log('\nBeeper Personal MCP · Your conversations, connected.\n');
-    mode = options.mode || await ask('Connection: local / tunnel / remote [local]: ', 'local');
+    mode = options.mode || await ask('Connection: local / openai (private ChatGPT) / tunnel (Cloudflare) / remote [local]: ', 'local');
     origin = options.url;
     if (mode === 'remote' && !origin) origin = await ask('Public HTTPS origin (https://mcp.example.com): ', '');
+    if (mode === 'openai') {
+      tunnelId = options['tunnel-id'] || await ask('OpenAI tunnel_id (from Platform tunnel settings): ', '');
+      allowWrites = options['allow-writes'] || (await ask('Enable direct writes through your private tunnel? yes / no [no]: ', 'no')).toLowerCase() === 'yes';
+    }
     email = options.email || await ask('Beeper account email (Enter to use Beeper’s own prompt): ', '');
   } finally { rl?.close(); }
-  const config = validateConfig({ version: 1, mode, port: Number(options.port || 8776), sendMode: 'confirm', ...(origin ? { origin } : {}) });
-  if (mode !== 'local' && !process.stdout.isTTY) throw new Error('Remote setup must run in a terminal so the owner password is shown privately.');
+  const config = validateConfig({ version: 1, mode, port: Number(options.port || 8776), sendMode: allowWrites ? 'direct' : 'confirm', ...(tunnelId ? { tunnelId } : {}), ...(origin ? { origin } : {}) });
+  if (['remote', 'tunnel'].includes(mode) && !process.stdout.isTTY) throw new Error('Remote setup must run in a terminal so the owner password is shown privately.');
+  if (mode === 'openai') await run('tunnel-client', ['--version']);
   if (mode === 'tunnel') await run('cloudflared', ['--version']);
   console.log('Installing locked MCP dependencies…');
   await run('npm', ['ci', '--prefix', join(root, 'mcp')]);
@@ -64,7 +70,7 @@ async function setup(options) {
   if (!target.auth?.accessToken) throw new Error('Beeper login is incomplete. Finish verification with bin/beeper, then run setup again.');
   let password;
   if (mode === 'local') config.localToken = randomBytes(32).toString('base64url');
-  else {
+  else if (mode !== 'openai') {
     const { hashOwnerPassword } = await import('../mcp/oauth.mjs');
     password = randomBytes(32).toString('base64url');
     config.ownerHash = hashOwnerPassword(password);
@@ -94,6 +100,14 @@ async function tunnel(port) {
 }
 async function start() {
   const config = loadConfig(root);
+  if (config.mode === 'openai') {
+    const key = await runtimeKey();
+    await run(beeper, ['targets', 'start', 'server']);
+    console.log(`\nPrivate OpenAI tunnel: ${config.tunnelId}\nIn ChatGPT: Add custom MCP server → Connection: Tunnel → select this tunnel → No authentication.\nAccess: ${config.sendMode === 'direct' ? 'READ + DIRECT WRITES (keep client approvals enabled)' : 'read-only'}. No public hostname or OAuth login.\nPress Ctrl+C to stop the tunnel.\n`);
+    await run('tunnel-client', openaiArgs(root, config), { env: { ...environment(root, config), CONTROL_PLANE_API_KEY: key } });
+    stop(0);
+    return;
+  }
   // Avoid launching a tunnel toward a different process already listening on this port.
   const { createServer } = await import('node:net');
   await new Promise((resolve, reject) => { const probe = createServer(); probe.once('error', () => reject(new Error(`Port ${config.port} is already in use.`))); probe.listen(config.port, '127.0.0.1', () => probe.close(resolve)); });
@@ -117,6 +131,12 @@ async function doctor() {
   const config = loadConfig(root);
   check('Beeper target saved', existsSync(join(root, 'state/beeper/targets/server.json')));
   try { await run(beeper, ['doctor', '-t', 'server']); } catch { failed = true; }
+  if (config.mode === 'openai') {
+    await run('tunnel-client', ['--version']);
+    console.log(`Private tunnel: ${config.tunnelId}. Check the local admin UI printed by tunnel-client for readiness and polling. No HTTP gateway runs in this mode.`);
+    process.exitCode = failed ? 1 : 0;
+    return;
+  }
   try {
     const response = await fetch(`http://127.0.0.1:${config.port}/mcp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(3000) });
     check('Gateway running and rejects unauthenticated requests', response.status === 401);
@@ -126,16 +146,23 @@ async function doctor() {
 }
 function connection() {
   const config = loadConfig(root);
+  if (config.mode === 'openai') { console.log(`ChatGPT connection: Tunnel, ID: ${config.tunnelId}, authentication: None. Access: ${config.sendMode === 'direct' ? 'read-write' : 'read-only'}.`); return; }
   if (config.mode !== 'local') { console.log('Use the HTTPS MCP URL printed by npm start, with OAuth. See docs/INSTALL.md.'); return; }
   if (!process.stdout.isTTY) throw new Error('Run in a terminal: this prints your private local bearer token.');
   console.log('Private client configuration — never share or commit this:');
   console.log(JSON.stringify({ mcpServers: { beeper: { type: 'http', url: `http://127.0.0.1:${config.port}/mcp`, headers: { Authorization: `Bearer ${config.localToken}` } } } }, null, 2));
 }
-const help = `Beeper Personal MCP\n\n  npm ci                         Install the official Beeper CLI\n  npm run setup                  Guided first-time setup\n  npm start                      Start the configured gateway\n  npm run doctor                 Check local readiness\n  node cli/index.mjs connection   Show local client settings (private)\n\nSetup flags: --mode local|tunnel|remote --url https://mcp.example.com\n            --email you@example.com --port 8776\n\nLocal mode is read-only. Tunnel and remote modes use OAuth with owner approval.\nCloudflared must be installed separately for temporary tunnels.\nDocumentation: docs/INSTALL.md\n`;
+const help = `Beeper Personal MCP\n\n  ./bin/setup                    Install, configure and launch\n  npm ci                         Install the official Beeper CLI\n  npm run setup                  Guided first-time setup\n  npm start                      Start the configured gateway\n  npm run doctor                 Check local readiness\n  node cli/index.mjs connection   Show local client settings (private)\n\nSetup flags: --mode local|openai|tunnel|remote --url https://mcp.example.com\n            --email you@example.com --port 8776\n            --tunnel-id tunnel_... --allow-writes (OpenAI mode only)\n\nLocal mode is read-only. OpenAI uses a private stdio tunnel (no OAuth).\nPublic tunnel and remote modes use OAuth with owner approval.\nCloudflared must be installed separately for temporary tunnels.\nDocumentation: docs/INSTALL.md\n`;
 try {
-  const { values, positionals } = parseArgs({ allowPositionals: true, options: { mode: { type: 'string' }, url: { type: 'string' }, email: { type: 'string' }, port: { type: 'string' }, help: { type: 'boolean', short: 'h' } } });
+  const { values, positionals } = parseArgs({ allowPositionals: true, options: { mode: { type: 'string' }, url: { type: 'string' }, email: { type: 'string' }, 'tunnel-id': { type: 'string' }, 'allow-writes': { type: 'boolean' }, port: { type: 'string' }, help: { type: 'boolean', short: 'h' } } });
   const command = positionals[0];
   if (values.help || !command || command === 'help') console.log(help);
+  else if (command === 'onboard') {
+    if (!existsSync(join(root, 'node_modules/.bin/beeper'))) await run('npm', ['ci', '--prefix', root]);
+    if (!configured(root)) await setup(values);
+    // Reuse the normal runner and its lock in a fresh child process.
+    await run(process.execPath, [fileURLToPath(import.meta.url), 'start']);
+  }
   else if (command === 'setup') await setup(values);
   else if (command === 'start') {
     // One CLI instance per checkout; avoid invalidating a running tunnel's grants.

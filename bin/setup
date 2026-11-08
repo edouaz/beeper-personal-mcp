@@ -1,0 +1,7 @@
+#!/bin/sh
+# First-time setup and launch from a clone. Existing credentials are preserved.
+set -eu
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+command -v node >/dev/null 2>&1 || { echo 'Install Node.js 20.19+ with npm first.' >&2; exit 1; }
+command -v npm >/dev/null 2>&1 || { echo 'npm is required; install it with Node.js.' >&2; exit 1; }
+exec node "$ROOT/cli/index.mjs" onboard "$@"

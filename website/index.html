@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A small, self-hosted bridge between your Beeper conversations and your assistant. Guided setup, private OpenAI tunnels, and an open-source MIT license.">
+  <meta name="theme-color" content="#f6f6fb">
+  <meta property="og:title" content="Beeper Personal MCP — Your conversations, connected.">
+  <meta property="og:description" content="All your chats. One little bridge. Run locally, connect your assistant, and stay in control.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://edouaz.github.io/beeper-personal-mcp/">
+  <meta property="og:image" content="https://edouaz.github.io/beeper-personal-mcp/assets/icons/logo-1024.png">
+  <link rel="canonical" href="https://edouaz.github.io/beeper-personal-mcp/">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/logo.svg">
+  <link rel="apple-touch-icon" href="assets/icons/logo-512.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>Beeper Personal MCP — Your conversations, connected.</title>
+  <script src="script.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav wrap">
+  <a class="wordmark" href="#" aria-label="Beeper Personal MCP home"><img src="assets/icons/logo.svg" alt="" width="34" height="34"><span>Beeper <span class="wordmark-muted">Personal MCP</span></span></a>
+  <nav aria-label="Main navigation"><a href="#connect">Get started</a><a href="#brand">Brand kit</a><a class="nav-github" href="https://github.com/edouaz/beeper-personal-mcp">GitHub <span aria-hidden="true">↗</span></a></nav>
+</header>
+<main id="main">
+  <section class="hero wrap" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="status-dot"></span> A personal bridge. Open source.</p>
+      <h1 id="hero-title">All your chats.<br><span>One little bridge.</span></h1>
+      <p class="intro">Bring the conversations in Beeper to your assistant. Catch up, find that message, and reply when you’re ready.</p>
+      <div class="hero-actions"><a class="button primary" href="#connect">Make the connection <span aria-hidden="true">→</span></a><a class="text-link" href="https://github.com/edouaz/beeper-personal-mcp#readme">Read the docs <span aria-hidden="true">↗</span></a></div>
+      <p class="hero-note">Self-hosted <span>·</span> MIT licensed <span>·</span> Made for your own account</p>
+    </div>
+    <div class="bridge-visual" aria-label="Illustration: Beeper connects to your assistant through your personal MCP bridge">
+      <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+      <div class="visual-label top-label"><span class="tiny-dot"></span> YOUR CONVERSATIONS</div>
+      <div class="chat-card chat-one"><span class="chat-symbol blue">↗</span><div><strong>That link you saved</strong><span>Found, without the scrolling.</span></div><span class="card-check">✓</span></div>
+      <div class="chat-card chat-two"><span class="chat-symbol purple">≋</span><div><strong>A little catch-up</strong><span>The conversations that matter.</span></div><span class="card-check">✓</span></div>
+      <div class="bridge-line"></div>
+      <div class="center-icon"><img src="assets/icons/logo.svg" width="98" height="98" alt="Beeper Personal MCP"></div>
+      <div class="assistant-pill"><span class="sparkle" aria-hidden="true">✦</span> Your assistant <span class="private-pill">Connected</span></div>
+      <div class="visual-caption">Your account. Your instance. Your call.</div>
+    </div>
+  </section>
+  <div class="network-strip wrap"><span>ONE PLACE FOR THE CHATS IN BEEPER</span><p>WhatsApp <i>·</i> Telegram <i>·</i> Signal <i>·</i> Messenger <i>·</i> and your other connected networks</p></div>
+  <section class="story wrap" aria-labelledby="story-title">
+    <div><p class="eyebrow">SMALL BY DESIGN</p><h2 id="story-title">Less switching.<br>More conversation.</h2></div>
+    <div class="story-items"><article><span class="item-number">01</span><div><h3>Find the thread.</h3><p>Search messages, read unread chats, and pick up where you left off across your connected accounts.</p></div></article><article><span class="item-number">02</span><div><h3>Choose how you connect.</h3><p>Keep it local, use a private OpenAI tunnel, or bring your own HTTPS endpoint. Cloudflare is optional.</p></div></article><article><span class="item-number">03</span><div><h3>Keep the final say.</h3><p>Start with read access. Public OAuth connections can require your approval for each message. Private tunnel writes are a separate opt-in.</p></div></article></div>
+  </section>
+  <section class="setup-section" id="connect" aria-labelledby="connect-title">
+    <div class="wrap"><div class="section-head"><div><p class="eyebrow">MAKE IT YOURS</p><h2 id="connect-title">A few steps.<br>Then you’re connected.</h2></div><p>Node.js 20.19+, npm, Git, and a Beeper account.<br>Linux is the validated platform; use WSL on Windows.</p></div>
+      <div class="setup-card"><div class="setup-options"><p class="small-label">PICK YOUR CONNECTION</p><div class="mode-buttons" role="group" aria-label="Connection mode"><button type="button" data-mode="openai" aria-pressed="true">OpenAI tunnel <span>Private · no domain</span></button><button type="button" data-mode="local" aria-pressed="false">Local only <span>For local MCP clients</span></button><button type="button" data-mode="tunnel" aria-pressed="false">Public tunnel <span>Temporary · Cloudflare</span></button><button type="button" data-mode="remote" aria-pressed="false">Your domain <span>Stable HTTPS + OAuth</span></button></div></div>
+      <div class="setup-details"><div class="mode-summary" aria-live="polite"><span class="mode-tag" id="mode-tag">PRIVATE OPENAI CONNECTION</span><h3 id="mode-title">Local server. Private connection.</h3><p id="mode-description">Use OpenAI’s Secure MCP Tunnel to reach your local Beeper gateway without a public hostname or an app-level OAuth login.</p><p class="mode-prereq" id="mode-prereq">First install the official tunnel-client and create a tunnel in OpenAI Platform. You need a runtime key and permission to use that tunnel.</p></div>
+        <div class="terminal"><div class="terminal-bar"><div aria-hidden="true"><i></i><i></i><i></i></div><span>Terminal</span><button class="copy" type="button" data-copy="setup-code">Copy commands</button></div><pre><code id="setup-code">git clone https://github.com/edouaz/beeper-personal-mcp.git
+cd beeper-personal-mcp
+./bin/setup --mode openai</code></pre></div>
+        <p class="setup-after" id="mode-after">The assistant installs dependencies, signs you in to Beeper, and launches the tunnel. Enter your tunnel ID when asked; the runtime key is hidden and stays in memory. Then select Tunnel in ChatGPT and choose No authentication.</p>
+        <div class="setup-links"><a id="mode-guide" href="https://github.com/edouaz/beeper-personal-mcp/blob/main/docs/OPENAI-TUNNEL.md">Connection guide <span aria-hidden="true">↗</span></a><a href="https://github.com/edouaz/beeper-personal-mcp/blob/main/docs/INSTALL.md">Full installation guide <span aria-hidden="true">↗</span></a></div>
+      </div></div>
+      <p class="setup-footnote">Next time, just run <code>npm start</code>. Credentials stay in your private <code>state/</code> directory. Never share it.</p>
+    </div>
+  </section>
+  <section class="privacy wrap" aria-labelledby="privacy-title"><div class="privacy-mark" aria-hidden="true">⌁</div><div><p class="eyebrow">A PERSONAL CONNECTION</p><h2 id="privacy-title">Your instance stays private.<br>The code stays open.</h2><p>The gateway runs on your machine. The messages you request are shared with the assistant you connect. Your Beeper credentials and conversation history never belong in this public repository.</p><a class="text-link" href="https://github.com/edouaz/beeper-personal-mcp/blob/main/docs/SECURITY-MODEL.md">Understand the security model <span aria-hidden="true">↗</span></a></div></section>
+  <section class="brand-section wrap" id="brand" aria-labelledby="brand-title"><div class="section-head"><div><p class="eyebrow">A LITTLE IDENTITY</p><h2 id="brand-title">Make your plugin<br>feel right at home.</h2></div><p>The same little bubble, ready for your personal app.<br>Original artwork, available under the MIT license.</p></div>
+    <div class="brand-grid"><div class="logo-preview"><div class="icon-examples"><img class="app-icon" src="assets/icons/logo.svg" alt="Blue and violet application icon with a white conversation bubble" width="128" height="128"><div class="composer-preview"><img src="assets/icons/composer.svg" width="48" height="48" alt="Monochrome composer icon"><span>Message your assistant</span></div></div><p>One app icon. A quieter composer mark.</p></div><div class="brand-downloads"><h3>Ready for your ChatGPT plugin.</h3><p>Square SVG originals and transparent PNG exports. Checked for dimensions and file size against OpenAI’s published icon rules.</p><div class="download-links"><a class="button primary" href="assets/brand-kit.zip" download>Download brand kit <span aria-hidden="true">↓</span></a><a href="assets/icons/logo-1024.png" download>App icon · PNG, 1024 px <span aria-hidden="true">↘</span></a><a href="assets/icons/logo.svg" download>App icon · SVG <span aria-hidden="true">↘</span></a><a href="assets/icons/composer.svg" download>Composer icon · SVG <span aria-hidden="true">↘</span></a></div><p class="brand-note">Includes a light/dark composer mark and manifest example. Asset validation doesn’t imply OpenAI review or endorsement.</p></div></div>
+  </section>
+  <section class="faq wrap" aria-labelledby="faq-title"><p class="eyebrow">GOOD TO KNOW</p><h2 id="faq-title">A few small details.</h2><details><summary>Do I need Cloudflare or a domain?</summary><p>No. Local mode needs neither. OpenAI Secure MCP Tunnel also works without a public hostname. Cloudflare is just one optional way to expose an HTTPS endpoint.</p></details><details><summary>Is “no OAuth” the same as “no authentication”?</summary><p>No. The private OpenAI path uses tunnel permissions and a runtime key. It skips an app-level OAuth flow because the MCP server is reached through a private pipe. Public HTTPS modes continue to require OAuth.</p></details><details><summary>Can it send messages?</summary><p>Yes, when you explicitly enable writes. Public OAuth mode supports individual message approval. OpenAI tunnel mode starts read-only; enabling writes allows direct actions, so keep your client’s action confirmations enabled. Never retry a send with an unknown outcome.</p></details><details><summary>Can I publish a public ChatGPT plugin with a private tunnel?</summary><p>Secure MCP Tunnel is for private connections and testing. Public plugin distribution needs a stable, publicly reachable HTTPS MCP endpoint and the applicable OpenAI review requirements. Making this repository public does not publish your private Beeper connection.</p></details><details><summary>Is this an official Beeper app?</summary><p>No. This is an independent community project, not affiliated with Beeper, OpenAI or Apple. Beeper Server is downloaded by the official Beeper CLI and is not redistributed here. Network support depends on your Beeper account and connected services.</p></details></section>
+</main>
+<footer class="wrap"><a class="wordmark" href="#"><img src="assets/icons/logo.svg" width="28" height="28" alt=""><span>Beeper Personal MCP</span></a><p>Your conversations, connected.</p><div><a href="https://github.com/edouaz/beeper-personal-mcp">Source</a><a href="https://github.com/edouaz/beeper-personal-mcp/blob/main/LICENSE">MIT license</a><a href="https://github.com/edouaz/beeper-personal-mcp/security/policy">Security</a></div></footer>
+<div class="sr-only" id="copy-status" role="status" aria-live="polite"></div>
+</body></html>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Beeper Personal MCP">
+<defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#65a8ff"/><stop offset="1" stop-color="#7760ec"/></linearGradient></defs>
+<rect width="1024" height="1024" rx="230" fill="url(#a)"/>
+<path d="M304 300h416a80 80 0 0 1 80 80v224a80 80 0 0 1-80 80H490L324 800V684h-20a80 80 0 0 1-80-80V380a80 80 0 0 1 80-80Z" fill="#fff"/>
+<g fill="#7760ec"><circle cx="384" cy="492" r="32"/><circle cx="512" cy="492" r="32"/><circle cx="640" cy="492" r="32"/></g></svg>

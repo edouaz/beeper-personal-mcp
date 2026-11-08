@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { readFileSync } from 'node:fs';
+import { beeperCredentials } from './credentials.mjs';
 import { timingSafeEqual, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -27,7 +27,7 @@ const time = z.string().datetime({ offset: true }).optional();
 const waitSeconds = z.number().int().min(0).max(30).default(8).describe('Seconds to wait for the message to leave the pending state (0 = return immediately). Default 8.');
 const annotations = { readOnlyHint: true, destructiveHint: false, openWorldHint: false };
 
-function createMcp(backend, oauthEnabled = false, confirmations, subject, directSend, startSubject, startChat, mediaReader, extras = {}) {
+export function createMcp(backend, oauthEnabled = false, confirmations, subject, directSend, startSubject, startChat, mediaReader, extras = {}) {
   const { actions, statusReader, health } = extras;
   const server = new McpServer({ name: 'beeper-confirmed', version: VERSION });
   const register = (name, description, inputSchema, run, write = false, scope = 'messages:send', contentBlock = false) => server.registerTool(name, {
@@ -70,7 +70,7 @@ function createMcp(backend, oauthEnabled = false, confirmations, subject, direct
   register('get_message_status', 'Get the delivery state of a message (final ID, pendingMessageID or Matrix event ID): pending | sent | delivered | read | failed. Read-only; safe to poll sparingly.', { chatID, messageID: id }, ({ chatID, messageID }) => statusReader.lookup(chatID, messageID));
   register('get_attachment_info', 'Get metadata of a message attachment (type, size, name, whether it can be downloaded) without downloading it.', { chatID, messageID: chatID, attachmentIndex: z.number().int().min(0).max(99) }, args => mediaReader.info(args));
   register('beeper_health', 'Report MCP and Beeper health: reachability, versions, connected accounts, available operations and the last upstream incident. Sends nothing.', {}, () => health());
-  if (actions && oauthEnabled) {
+  if (actions && (oauthEnabled || subject)) {
     register('mark_chat_read', 'Mark a chat as read (optionally up to a message). May send a read receipt to the contact.', { chatID, messageID: id.optional() }, args => actions.markRead(args), true);
     register('mark_chat_unread', 'Mark a chat as unread locally.', { chatID }, args => actions.markUnread(args), true);
     register('save_chat_draft', 'Save a persistent draft in a Beeper chat (replaces any existing draft). Nothing is sent.', { chatID, text: z.string().min(1).max(10000) }, args => actions.setDraft(args), true);
@@ -226,19 +226,7 @@ export function createHttpServer({ mcpToken, beeperToken, beeperPort = 23374, ba
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const port = Number(process.env.MCP_PORT || '8776');
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid MCP port');
-  let beeperToken = process.env.BEEPER_ACCESS_TOKEN;
-  let beeperPort = Number(process.env.BEEPER_PORT || '23374');
-  if (!beeperToken && process.env.BEEPER_TARGET_FILE) {
-    try {
-      const target = JSON.parse(readFileSync(process.env.BEEPER_TARGET_FILE, 'utf8'));
-      const baseURL = new URL(target.baseURL);
-      if (target.type !== 'server' || baseURL.protocol !== 'http:' || baseURL.hostname !== '127.0.0.1' || baseURL.username || baseURL.password || baseURL.pathname !== '/' || baseURL.search || baseURL.hash) throw new Error();
-      const targetPort = Number(baseURL.port || '80');
-      if (process.env.BEEPER_PORT && beeperPort !== targetPort) throw new Error();
-      beeperPort = targetPort;
-      beeperToken = target.auth?.accessToken;
-    } catch { throw new Error('Could not load Beeper Server target authentication'); }
-  }
+  const { token: beeperToken, port: beeperPort } = beeperCredentials();
   let oauth, resourceMetadata;
   const sendMode = process.env.BEEPER_SEND_MODE || 'confirm';
   if (!['confirm', 'direct'].includes(sendMode)) throw new Error('Invalid BEEPER_SEND_MODE');

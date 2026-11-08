@@ -25,3 +25,7 @@ This is a single-owner gateway: OAuth identifies the client, not separate humans
 ## If something leaks
 
 Stop the gateway. Delete `state/oauth.json` and `state/oauth-tunnel.json` to revoke OAuth grants. For guided setup, move `state/setup.json` to a secure private backup and rerun setup to rotate the owner password or local bearer token, then reconnect clients. For manual deployments, rotate the owner password with `setup-owner.mjs`. If the Beeper token may be exposed, revoke the affected device in Beeper and sign in again. Report vulnerabilities as described in `SECURITY.md`.
+
+## Private OpenAI stdio boundary
+
+The optional `openai` CLI mode runs `mcp/stdio.mjs` as a private child of the official tunnel-client. It exposes no MCP HTTP listener and no anonymous/public HTTP option was added. OpenAI tunnel permissions and a runtime key provide transport access; no app-level OAuth metadata is advertised. Read-only is the default. The explicit `--allow-writes` setup option grants a single local owner subject to the enabled direct-send/actions tools. In this mode there is no per-message owner-password page; keep client action confirmations enabled. Never share tunnel access beyond the intended owner. See [OpenAI tunnel setup](OPENAI-TUNNEL.md).

@@ -14,14 +14,14 @@ The default setup is per checkout, per owner. It does not change the system Beep
 ```sh
 git clone https://github.com/edouaz/beeper-personal-mcp.git
 cd beeper-personal-mcp
-npm ci
-npm run setup
-npm start
+./bin/setup
 ```
+
+`./bin/setup` installs, configures and launches the gateway in one step. On subsequent runs, use `npm start`. You can still use `npm ci`, `npm run setup` and `npm start` separately for manual control.
 
 `npm ci` installs the pinned official `beeper-cli` launcher. The assistant runs `npm ci --prefix mcp`, then `bin/beeper setup --server --install -t server`. Complete its interactive login and device verification. If verification is incomplete, run `./bin/beeper verify --help`, follow the CLI instructions, then rerun setup. No message is sent by this gateway’s setup.
 
-Choose local, tunnel, or remote. Pass `--mode`, `--email`, `--url`, and `--port` to skip individual prompts:
+Choose local, openai, tunnel, or remote. The `openai` option uses a private OpenAI connection without Cloudflare, a public hostname or app-level OAuth; see [the dedicated guide](OPENAI-TUNNEL.md). Pass `--mode`, `--email`, `--url`, and `--port` to skip individual prompts:
 
 ```sh
 npm run setup -- --mode local --port 8776
@@ -36,9 +36,17 @@ npm start
 node cli/index.mjs connection
 ```
 
-The second command prints the private bearer configuration, only in a terminal. Use its URL and Authorization header in an MCP client that supports Streamable HTTP and custom headers. The `mcpServers` example is illustrative; consult your client’s schema. No stdio transport is provided.
+The second command prints the private bearer configuration, only in a terminal. Use its URL and Authorization header in an MCP client that supports Streamable HTTP and custom headers. The `mcpServers` example is illustrative; consult your client’s schema. The local HTTP mode does not use stdio; the separate OpenAI mode provides a private stdio transport.
 
 Local bearer mode permits reading and a local draft helper; OAuth is required for mutations. The gateway binds to `127.0.0.1`, never all interfaces. A token protects even local requests. Do not publish the token, config output or the entire `state/` directory.
+
+## Private OpenAI tunnel
+
+```sh
+./bin/setup --mode openai
+```
+
+Install the official tunnel-client and provision an OpenAI tunnel first. The wizard asks for the tunnel ID and requests a runtime key privately at startup. In ChatGPT choose Connection: Tunnel and No authentication. Read-only is the default; direct writes require an explicit opt-in. No MCP HTTP listener or app OAuth flow is used. Follow [the full private-tunnel guide](OPENAI-TUNNEL.md) for permissions and troubleshooting.
 
 ## Temporary HTTPS tunnel
 
@@ -80,7 +88,7 @@ The current OAuth callback allow-list accepts only `chatgpt.com` callbacks. Do n
 
 ## Advanced: direct sends
 
-Guided setup uses `confirm`. To opt into direct sending, stop the gateway, read [the security model](SECURITY-MODEL.md), privately edit `state/setup.json` to set `"sendMode": "direct"`, restart, and reauthorize the client with the appropriate scopes. This only works with OAuth. Never commit this file. Direct mode removes per-message approval and allows additional network mutations.
+Guided setup uses `confirm`. To opt into direct sending, stop the gateway, read [the security model](SECURITY-MODEL.md), privately edit `state/setup.json` to set `"sendMode": "direct"`, restart, and reauthorize the client with the appropriate scopes. For public HTTP connections this requires OAuth. In OpenAI stdio mode it opts into direct writes under the tunnel’s access permissions; there is no intermediate owner-password page. Never commit this file. Direct mode removes per-message approval and allows additional network mutations.
 
 ## Services and manual deployments
 
