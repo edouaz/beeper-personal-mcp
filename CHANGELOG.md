@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use English by default throughout the OAuth/confirmation UI, error messages and plugin metadata.
+
 - Add a private OpenAI Secure MCP Tunnel mode with stdio, no app OAuth, read-only defaults and explicit direct-write opt-in.
 - Add `bin/setup` to install, configure and launch from one command after cloning.
 - Publish a responsive GitHub Pages website with connection-mode guides and a validated SVG/PNG brand kit.

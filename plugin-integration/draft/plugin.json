@@ -7,7 +7,7 @@
     "com.openai": {
       "interface": {
         "displayName": "Private Beeper Conversations",
-        "shortDescription": "Beeper avec envoi confirm\u00e9",
+        "shortDescription": "Beeper with approved messaging",
         "longDescription": "Read and search connected Beeper chats. Prepare text messages and approve each exact recipient and text on a protected owner page before one send attempt.",
         "category": "Productivity",
         "capabilities": [],

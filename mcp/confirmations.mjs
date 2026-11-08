@@ -28,24 +28,24 @@ export function createConfirmations({ origin, ownerPasswordHash, backend, clock 
     try {
       const item = lookup(req.query.request);
       item.csrf = random();
-      res.type('html').send(`<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Confirmer le message Beeper</title>${pageHeader}<h1>Autoriser cet envoi</h1><p>Conversation : <strong>${escape(item.title)}</strong></p><p>Réseau : ${escape(item.network)}</p><p>Identifiant exact : <code>${escape(item.chatID)}</code></p><pre style="white-space:pre-wrap;unicode-bidi:plaintext">${escape(item.text)}</pre><p>Cette autorisation expire après 10 minutes et permet un seul essai d’envoi. Le bouton autorise ChatGPT à envoyer ce message exact.</p><form method="post" action="${path}"><input type="hidden" name="request" value="${escape(req.query.request)}"><input type="hidden" name="csrf" value="${item.csrf}"><label>Mot de passe propriétaire <input type="password" name="password" autocomplete="current-password" required maxlength="256"></label><button type="submit">J’autorise cet envoi exact</button></form></main></body></html>`);
-    } catch { res.status(410).send('Confirmation expirée ou déjà utilisée.'); }
+      res.type('html').send(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Confirm Beeper message</title>${pageHeader}<h1>Approve this message</h1><p>Conversation: <strong>${escape(item.title)}</strong></p><p>Network: ${escape(item.network)}</p><p>Exact chat ID: <code>${escape(item.chatID)}</code></p><pre style="white-space:pre-wrap;unicode-bidi:plaintext">${escape(item.text)}</pre><p>This approval expires after 10 minutes and allows one send attempt. The button authorizes ChatGPT to send this exact message.</p><form method="post" action="${path}"><input type="hidden" name="request" value="${escape(req.query.request)}"><input type="hidden" name="csrf" value="${item.csrf}"><label>Owner password <input type="password" name="password" autocomplete="current-password" required maxlength="256"></label><button type="submit">Approve this exact message</button></form></main></body></html>`);
+    } catch { res.status(410).send('Confirmation expired or already used.'); }
   });
   app.post(path, (req, res) => {
-    if (req.get('origin') !== origin) return res.status(403).send('Origine invalide.');
-    if (clock() < lockedUntil) return res.status(429).send('Trop de tentatives. Réessayez plus tard.');
+    if (req.get('origin') !== origin) return res.status(403).send('Invalid origin.');
+    if (clock() < lockedUntil) return res.status(429).send('Too many attempts. Try again later.');
     try {
       const item = lookup(req.body?.request);
-      if (!item.csrf || req.body.csrf !== item.csrf) return res.status(403).send('Formulaire invalide.');
+      if (!item.csrf || req.body.csrf !== item.csrf) return res.status(403).send('Invalid form.');
       if (!checkPassword(req.body.password, ownerPasswordHash)) {
         if (++failed >= 5) { failed = 0; lockedUntil = clock() + 15 * 60 * 1000; }
-        return res.status(401).send('Authentification refusée.');
+        return res.status(401).send('Authentication failed.');
       }
       failed = 0; item.approved = true; delete item.csrf;
-      res.type('html').send(`<!doctype html><html lang="fr"><meta charset="utf-8"><title>Message autorisé</title>${pageHeader}<p>Autorisation enregistrée. Revenez dans ChatGPT pour terminer cet envoi. Aucun message n’a été envoyé par cette page.</p></main></body></html>`);
-    } catch { res.status(410).send('Confirmation expirée ou déjà utilisée.'); }
+      res.type('html').send(`<!doctype html><html lang="en"><meta charset="utf-8"><title>Message approved</title>${pageHeader}<p>Approval saved. Return to ChatGPT to complete this send. This page has not sent a message.</p></main></body></html>`);
+    } catch { res.status(410).send('Confirmation expired or already used.'); }
   });
-  app.use((error, _req, res, _next) => res.status(error.status === 413 ? 413 : 400).send('Requête invalide.'));
+  app.use((error, _req, res, _next) => res.status(error.status === 413 ? 413 : 400).send('Invalid request.'));
   return {
     handle(req, res) { if (new URL(req.url, origin).pathname !== path) return false; app(req, res); return true; },
     async prepare({ chatID, text }, subject) {

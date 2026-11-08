@@ -79,7 +79,7 @@ Tests use mocks and a fake Beeper server. They do not access your account or sen
 
 ## Privacy, limits and license
 
-Read the [security model](docs/SECURITY-MODEL.md) and [security policy](SECURITY.md). Keep `state/` private and back it up securely. Public HTTP OAuth callbacks currently support **ChatGPT only**. Private OpenAI tunnels use stdio with no app-level OAuth. Other local clients can use the bearer mode; the HTTP configuration format depends on the client. Consent pages are currently in French. Duplicate/rate protections are in memory and reset at restart. One owner per instance; this is not a multi-user SaaS.
+Read the [security model](docs/SECURITY-MODEL.md) and [security policy](SECURITY.md). Keep `state/` private and back it up securely. Public HTTP OAuth callbacks currently support **ChatGPT only**. Private OpenAI tunnels use stdio with no app-level OAuth. Other local clients can use the bearer mode; the HTTP configuration format depends on the client. The CLI, website, documentation and approval pages use English by default. Duplicate/rate protections are in memory and reset at restart. One owner per instance; this is not a multi-user SaaS.
 
 [MIT](LICENSE) applies to this repository. Beeper Server is proprietary software downloaded from Beeper by its official CLI; it is not redistributed here. Beeper, Apple and network names belong to their respective owners. The visual identity uses original artwork; see [brand notes](docs/BRAND.md).
 

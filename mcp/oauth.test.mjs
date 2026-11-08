@@ -97,13 +97,13 @@ test('owner authorization, PKCE, redirect binding, token persistence and no unau
     directServer.listen(0, '127.0.0.1'); await once(directServer, 'listening');
     try {
       const consent = await (await fetch(`http://127.0.0.1:${directServer.address().port}/beeper/oauth/authorize?${sendParams}`)).text();
-      assert.ok(consent.includes('envoi direct de messages sans confirmation'));
-      assert.ok(!consent.includes('Chaque envoi exige'));
+      assert.ok(consent.includes('send messages directly without a separate confirmation'));
+      assert.ok(!consent.includes('Each send requires'));
     } finally { await new Promise(resolve => directServer.close(resolve)); }
     const sendResponse = await fetch(`${base}/beeper/oauth/authorize?${sendParams}`);
     const sendCookie = sendResponse.headers.get('set-cookie').split(';')[0];
     const sendForm = await sendResponse.text();
-    assert.ok(sendForm.includes('Chaque envoi exige'));
+    assert.ok(sendForm.includes('Each send requires'));
     const sendNonce = sendForm.match(/name="request" value="([^"]+)"/)[1];
     const sendApproval = await post('/beeper/oauth/approve', { request: sendNonce, password }, { headers: { Cookie: sendCookie, Referer: 'https://example.com/beeper/oauth/authorize' }, redirect: 'manual' });
     const sendCode = new URL(sendApproval.headers.get('location')).searchParams.get('code');
@@ -115,7 +115,7 @@ test('owner authorization, PKCE, redirect binding, token persistence and no unau
     const startResponse = await fetch(`${base}/beeper/oauth/authorize?${startParams}`);
     const startCookie = startResponse.headers.get('set-cookie').split(';')[0];
     const startForm = await startResponse.text();
-    assert.ok(startForm.includes('création ou ouverture de conversations WhatsApp'));
+    assert.ok(startForm.includes('creating or opening WhatsApp conversations'));
     const startNonce = startForm.match(/name="request" value="([^"]+)"/)[1];
     const startApproval = await post('/beeper/oauth/approve', { request: startNonce, password }, { headers: { Cookie: startCookie, Referer: 'https://example.com/beeper/oauth/authorize' }, redirect: 'manual' });
     const startCode = new URL(startApproval.headers.get('location')).searchParams.get('code');

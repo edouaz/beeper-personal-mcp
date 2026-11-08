@@ -19,7 +19,7 @@ This is a single-owner gateway: OAuth identifies the client, not separate humans
 - The Beeper API token in `state/beeper/targets/server.json` is all-powerful and the service runs as your user; systemd sandboxing limits writes but is not isolation from your other processes. A dedicated Unix user is better.
 - Duplicate protection is process-local. Rate limits are global, not per client.
 - Edit, delete, reaction and file tools share the `messages:send` scope; there is no finer permission.
-- The consent page is currently in French.
+- Consent and message approval pages use English by default.
 - WhatsApp may restrict accounts that contact many unknown numbers. This project limits its own rate but does not bypass any WhatsApp protection and offers no bulk messaging.
 
 ## If something leaks
